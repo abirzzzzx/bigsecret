@@ -1,1 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Current information — Brajesh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-a:#071024; --bg-b:#081229; --muted: rgba(255,255,255,0.72); --accent:#7c5cff;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+      background: linear-gradient(180deg,var(--bg-a),var(--bg-b));
+      color:#fff; padding:28px; display:flex; align-items:flex-start; justify-content:center;
+    }
+    .container{
+      width:100%; max-width:920px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px; padding:28px; border:1px solid rgba(255,255,255,0.03); box-shadow: 0 12px 40px rgba(2,6,23,0.6);
+    }
+    h1{ font-family:"Playfair Display",serif; font-weight:700; font-size:28px; margin-bottom:8px;
+       background: linear-gradient(90deg,#8be9fd,var(--accent)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+    .disclaimer{ background: rgba(255,255,255,0.03); padding:10px 12px; border-radius:10px; color:var(--muted);
+                font-size:14px; border:1px solid rgba(255,255,255,0.02); margin-bottom:18px; }
+    .record{ color:rgba(255,255,255,0.92); line-height:1.7; font-size:15px }
+    .meta{ color:var(--muted); font-size:13px; margin-top:8px }
+    .back{ display:inline-block; margin-top:18px; padding:8px 12px; border-radius:10px; background:linear-gradient(90deg,#8be9fd,var(--accent));
+           color:#062033; text-decoration:none; font-weight:600; }
+    @media (max-width:700px){ .container{padding:18px} h1{font-size:22px} }
+  </style>
+</head>
+<body>
+  <main class="container" role="main" aria-label="Current information">
+    <h1>Current information</h1>
 
+    <div class="disclaimer" role="note" aria-live="polite">
+      Important: The content below reproduces a reported complaint and related administrative notes. It is presented as a record of what was reported and is not a verification of facts. If you are the subject of these entries and believe them to be incorrect, please provide verifiable documentation to the appropriate administrator so the record can be updated or removed.
+    </div>
+
+    <article class="record" id="record-content">
+      <p><strong>Record summary (reported):</strong></p>
+
+      <p>On [date — insert verified date], a complaint was submitted to school administration alleging that a student had been physically harmed during an interaction with the instructor named on this profile. The complainant described the event as physical contact that was perceived to be harmful.</p>
+
+      <p>The school principal spoke with the teacher to gather information. During that meeting the principal said that a complaint had been received alleging that the teacher struck a student. The principal explained the school's investigation process and that an inquiry would be launched to gather witness statements and any available evidence (for example, statements, CCTV footage, or medical documentation) to determine the facts.</p>
+
+      <p>Administrative notes indicate the school opened a temporary inquiry process. This typically includes interviewing the involved parties, collecting witness statements, preserving any evidence, and following the school's misconduct procedures. The teacher indicated awareness of the complaint and agreed to cooperate. At the time of these notes, no final disciplinary action had been publicly recorded pending completion of the investigation.</p>
+
+      <p>If and when the school concludes its review, outcomes (including any disciplinary decisions, exoneration, or remediation) will be recorded here if they are cleared for public release. This page intentionally presents reported items as reports under review, not as proven facts.</p>
+
+      <p class="meta">Status: Reported complaint under review (unverified). Last updated: [insert date/time].</p>
+    </article>
+
+    <a class="back" href="./index.html">Back to profile</a>
+  </main>
+</body>
+</html>
