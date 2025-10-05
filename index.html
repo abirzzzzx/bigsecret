@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Brajesh — Profile</title>
+
+  <!-- Google Fonts: playfair for headline, inter for body -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg-a: #0f1724;
+      --bg-b: #0b1220;
+      --accent-1: #8be9fd;
+      --accent-2: #7c5cff;
+      --glass-border: rgba(255,255,255,0.06);
+      --muted: rgba(255,255,255,0.7);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(135deg,var(--bg-a),var(--bg-b));
+      -webkit-font-smoothing:antialiased;
+      color:#fff;
+      display:flex;
+      align-items:flex-start; /* top alignment so sticky card sits correctly */
+      justify-content:center;
+      padding:40px;
+      overflow:auto;
+      gap:28px;
+    }
+
+    .glow{
+      position:fixed;
+      inset:-30%;
+      background: radial-gradient(600px 400px at 15% 20%, rgba(124,92,255,0.18), transparent 8%),
+                  radial-gradient(600px 400px at 85% 80%, rgba(139,233,253,0.12), transparent 8%);
+      filter: blur(60px);
+      animation: float 12s ease-in-out infinite;
+      pointer-events:none;
+      z-index:0;
+    }
+    @keyframes float{
+      0%{transform: translate3d(0,0,0) scale(1)}
+      50%{transform: translate3d(10px,-18px,0) scale(1.02)}
+      100%{transform: translate3d(0,0,0) scale(1)}
+    }
+
+    /* Main card stays visible while you scroll (spacer provides scroll area) */
+    .card{
+      position:sticky;
+      top:48px;
+      z-index:2;
+      width:100%;
+      max-width:920px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border-radius:18px;
+      padding:36px 44px;
+      box-shadow: 0 10px 40px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px) saturate(120%);
+      display:flex;
+      gap:28px;
+      align-items:center;
+      overflow:visible;
+      animation: fadeUp .7s ease both;
+      transition: transform .18s ease;
+    }
+    @keyframes fadeUp{
+      from{opacity:0; transform: translateY(10px)}
+      to{opacity:1; transform: translateY(0)}
+    }
+
+    .avatar{
+      width:140px;
+      height:140px;
+      border-radius:16px;
+      background: linear-gradient(135deg,var(--accent-2),var(--accent-1));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+      box-shadow: 0 8px 30px rgba(124,92,255,0.18);
+      position:relative;
+      overflow:hidden;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .avatar:hover{ transform: translateY(-6px) scale(1.02); box-shadow: 0 18px 40px rgba(124,92,255,0.12); }
+    .avatar h1{font-family:"Playfair Display",serif;font-size:44px;margin:0;color:white;text-transform:uppercase}
+
+    .content{flex:1;min-width:0}
+
+    .title{display:flex;align-items:baseline;gap:18px;margin-bottom:10px}
+
+    .title h2{
+      font-family:"Playfair Display", serif;
+      font-weight:700;
+      font-size:40px;
+      margin:0;
+      background: linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      -webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+      display:inline-block;
+      transition: transform .18s cubic-bezier(.2,.9,.2,1), text-shadow .18s ease;
+      cursor:default;
+    }
+    .title h2:hover, .title h2:focus { transform: translateY(-4px) scale(1.01); text-shadow: 0 10px 30px rgba(124,92,255,0.12); }
+    .title h2:focus{ outline:none }
+
+    .title .meta-pill{
+      font-size:13px;color:var(--muted);
+      background: rgba(255,255,255,0.02);
+      padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.03);
+      box-shadow:0 4px 18px rgba(11,18,32,0.25);
+      transition: transform .18s ease; cursor:default;
+    }
+    .title .meta-pill:hover{ transform: translateY(-4px) }
+
+    .description{margin-top:6px;color:rgba(255,255,255,0.86);font-size:16px;line-height:1.6;max-width:70ch;margin-bottom:18px}
+
+    .info-list{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}
+
+    /* info chips are buttons so they are hoverable and keyboard accessible */
+    .info{
+      -webkit-appearance:none;appearance:none;
+      display:flex;gap:10px;align-items:center;
+      color:rgba(255,255,255,0.95);font-size:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);
+      backdrop-filter: blur(6px);
+      cursor:pointer;
+      transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s ease, background .18s ease;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.28);
+    }
+    .info:hover, .info:focus{ transform: translateY(-6px) scale(1.02); box-shadow: 0 20px 44px rgba(124,92,255,0.14); background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02)); outline:none }
+    .info svg{opacity:0.95;width:18px;height:18px;flex-shrink:0}
+
+    .buttons{margin-top:18px;display:flex;gap:12px;flex-wrap:wrap}
+    .btn{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;
+      font-weight:600;font-size:14px;color:rgba(255,255,255,0.95);
+      background: rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04);
+      text-decoration:none;transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s ease;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.45);backdrop-filter: blur(6px);
+    }
+    .btn:hover{ transform: translateY(-6px) scale(1.02); box-shadow: 0 18px 40px rgba(124,92,255,0.16) }
+    .btn.primary{ background: linear-gradient(90deg,var(--accent-1),var(--accent-2)); color:#081229; border:none }
+    .btn.ghost{ background:transparent;border:1px solid rgba(255,255,255,0.06) }
+
+    .note{ margin-top:16px;font-size:13px;color:rgba(255,255,255,0.65) }
+
+    /* Invisible spacer: creates vertical space so the page scrolls without any visible text below */
+    .scroll-spacer{
+      width:100%;
+      max-width:920px;
+      height:120vh; /* adjust to control scroll length */
+      background:transparent;
+      pointer-events:none;
+      z-index:1;
+    }
+
+    /* focus ring only for keyboard users */
+    .info:focus-visible, .btn:focus-visible, .title h2:focus-visible {
+      box-shadow: 0 0 0 4px rgba(124,92,255,0.12), 0 18px 40px rgba(124,92,255,0.12);
+    }
+
+    @media (max-width:700px){
+      body{padding:20px}
+      .card{top:20px;padding:20px}
+      .avatar{width:120px;height:120px}
+      .title h2{font-size:28px}
+      .scroll-spacer{height:220vh}
+    }
+  </style>
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+
+  <main class="card" role="article" aria-label="Profile card for Brajesh">
+    <div class="avatar" aria-hidden="true"><h1>B</h1></div>
+
+    <div class="content">
+      <div class="title">
+        <h2 tabindex="0">Brajesh</h2>
+        <div class="meta-pill">Premium Profile</div>
+      </div>
+
+      <p class="description">
+        Brajesh Choudhary — a dedicated educator who brings passion and clarity to the classroom. Currently teaching at Kendriya Vidyalaya, Durgapur, he focuses on meaningful learning experiences and student engagement.
+      </p>
+
+      <div class="info-list" role="list">
+        <button class="info" type="button" aria-label="Full name: Brajesh Choudhary" title="Full name">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM6 20v-1c0-2.21 3.582-4 6-4s6 1.79 6 4v1" stroke="rgba(255,255,255,0.9)" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Brajesh Choudhary
+        </button>
+
+        <button class="info" type="button" aria-label="Workplace: Kendriya Vidyalaya, Durgapur" title="Workplace">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h18M6 7v13h12V7" stroke="rgba(255,255,255,0.9)" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Teaches at Kendriya Vidyalaya, Durgapur
+        </button>
+
+        <button class="info" type="button" aria-label="Experience: 1 year plus" title="Experience">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 6v6l4 2" stroke="rgba(255,255,255,0.9)" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Experience at current school: 1 year+
+        </button>
+      </div>
+
+      <div class="buttons" role="navigation" aria-label="Profile actions">
+        <a class="btn primary" href="./info.html">Current information</a>
+        <a class="btn ghost" href="#contact">Contact</a>
+        <a class="btn" href="#more">More</a>
+      </div>
+
+      <p class="note">Focused on creating a smooth, engaging classroom environment — student-first philosophy, continuous improvement, and collaborative teaching techniques.</p>
+    </div>
+  </main>
+
+  <!-- Invisible spacer only — no visible text below the card -->
+  <div class="scroll-spacer" aria-hidden="true"></div>
+
+</body>
+    </html>
