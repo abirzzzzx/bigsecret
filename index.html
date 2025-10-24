@@ -250,7 +250,7 @@
         Syntax: CREATE(name,status,experience,id|AUTO,premium(true|false),trophies) • BAN(id) • IN(id) • UN(id) • EDIT(idOrIndex,field,newValue) • SHOW() or SHOW(id)
       </div>
 
-      <div class="chips" aria-hidden="false">
+      <div id="chipRow" class="chips" aria-hidden="false">
         <button class="chip" data-cmd="CREATE(Alice,Active,3y,AUTO,true,5)">CREATE example</button>
         <button class="chip" data-cmd="BAN(0000000001)">BAN example</button>
         <button class="chip" data-cmd="IN(0000000001)">IN example</button>
@@ -271,27 +271,21 @@
   </div>
 
   <script>
-    // Storage key
+    // Key for localStorage
     const STORAGE_KEY = 'bs_users';
 
-    // Utilities
-    function nowTime(){
-      return new Date().toLocaleTimeString();
-    }
+    // --- Utilities ---
+    function nowTime(){ return new Date().toLocaleTimeString(); }
 
-    function log(msg, type='info') {
+    function createLogEntry(msg, type='info'){
       const wrap = document.getElementById('log');
       const e = document.createElement('div');
       e.className = 'entry ' + (type === 'error' ? 'error' : 'info');
       const ts = document.createElement('div'); ts.className='ts'; ts.textContent = '['+ nowTime() +']';
       const body = document.createElement('div'); body.style.flex='1'; body.textContent = msg;
       e.appendChild(ts); e.appendChild(body);
+      // prepend for newest first
       wrap.prepend(e);
-    }
-
-    function saveUsers(arr){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-      renderUsers();
     }
 
     function loadUsers(){
@@ -300,24 +294,31 @@
         if(!raw) return [];
         const parsed = JSON.parse(raw);
         return Array.isArray(parsed) ? parsed : [];
-      } catch(e){
-        console.error(e);
+      } catch (e){
+        console.error('loadUsers error', e);
         return [];
       }
     }
 
-    // Unique 10-digit id generator
+    function saveUsers(arr){
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+        renderUsers();
+      } catch(e){
+        console.error('saveUsers error', e);
+      }
+    }
+
+    // generate unique 10-digit id
     function generateId(existingSet){
       existingSet = existingSet || new Set(loadUsers().map(u=>String(u.id)));
-      for(let i=0;i<1000;i++){
+      for(let i=0;i<2000;i++){
         const id = String(Math.floor(1e9 + Math.random()*9e9)); // 10-digit
         if(!existingSet.has(id)) return id;
       }
-      // fallback incremental
+      // fallback
       let id = String(Date.now()).slice(-10);
-      while(existingSet.has(id)) {
-        id = (parseInt(id,10)+1).toString().padStart(10,'0');
-      }
+      while(existingSet.has(id)) id = (parseInt(id,10)+1).toString().padStart(10,'0');
       return id;
     }
 
@@ -335,19 +336,20 @@
       return ['true','1','yes','y'].includes(v);
     }
 
-    // Render users in panel
+    // --- Rendering users panel ---
     function renderUsers(){
       const container = document.getElementById('users');
       container.innerHTML = '';
       const users = loadUsers();
       if(users.length === 0){
-        const p = document.createElement('div');
-        p.className = 'muted';
-        p.textContent = 'No users yet. Use CREATE(...) to add.';
-        container.appendChild(p);
+        const placeholder = document.createElement('div');
+        placeholder.className = 'muted';
+        placeholder.textContent = 'No users yet. Use CREATE(...) to add.';
+        container.appendChild(placeholder);
         return;
       }
-      users.forEach((u, idx) => {
+
+      users.forEach(u => {
         const el = document.createElement('div'); el.className = 'user'; el.setAttribute('role','listitem');
 
         const av = document.createElement('div'); av.className='u-avatar'; av.textContent = (u.name && u.name[0]) ? u.name[0].toUpperCase() : '#';
@@ -367,19 +369,17 @@
         const pill = document.createElement('div'); pill.className='pill';
         if(u.status === 'Banned'){ pill.className = 'pill banned'; pill.textContent='BANNED'; }
         else if(u.status === 'Suspended'){ pill.className = 'pill suspended'; pill.textContent='SUSPENDED'; }
-        else { pill.className = 'pill'; pill.textContent = u.premium ? 'PREMIUM' : 'FREE'; }
+        else { pill.className = u.premium ? 'pill' : 'pill free'; pill.textContent = u.premium ? 'PREMIUM' : 'FREE'; }
 
         const actions = document.createElement('div'); actions.className='u-actions';
         const showBtn = document.createElement('button'); showBtn.className='chip'; showBtn.style.padding='6px 8px'; showBtn.style.fontSize='12px'; showBtn.textContent='SHOW';
+        showBtn.type = 'button';
+        // clicking show only triggers SHOW for that id
         showBtn.addEventListener('click', (ev)=> { ev.stopPropagation(); runCommand(`SHOW(${u.id})`); });
 
         actions.appendChild(showBtn);
         meta.appendChild(pill);
         meta.appendChild(actions);
-
-        el.appendChild(av);
-        el.appendChild(body);
-        el.appendChild(meta);
 
         // click to prefill command input
         el.addEventListener('click', ()=> {
@@ -388,11 +388,15 @@
           c.focus();
         });
 
+        el.appendChild(av);
+        el.appendChild(body);
+        el.appendChild(meta);
+
         container.appendChild(el);
       });
     }
 
-    // Argument parser (handles quoted args)
+    // --- Argument parsing (supports quoted args) ---
     function parseArgs(text){
       if(!text) return [];
       const out = [];
@@ -400,7 +404,7 @@
       let quote = null;
       for(let i=0;i<text.length;i++){
         const ch = text[i];
-        if((ch === '"' || ch === "'")){
+        if(ch === '"' || ch === "'"){
           if(quote === ch){ quote = null; continue; }
           if(!quote){ quote = ch; continue; }
         }
@@ -412,7 +416,7 @@
         cur += ch;
       }
       if(cur.trim() !== '') out.push(cur.trim());
-      return out.map(s => {
+      return out.map(s=>{
         if((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))){
           return s.slice(1,-1);
         }
@@ -420,17 +424,17 @@
       });
     }
 
-    // Commands
+    // --- Commands (CREATE, BAN, IN, UN, EDIT, SHOW) ---
     function cmdCreate(args){
-      if(args.length < 6){ log('CREATE requires 6 args: name,status,experience,id|AUTO,premium,trophies', 'error'); return; }
+      if(args.length < 6){ createLogEntry('CREATE requires 6 args: name,status,experience,id|AUTO,premium,trophies', 'error'); return; }
       const [name, statusRaw, exp, idRaw, premiumRaw, trophiesRaw] = args;
       const users = loadUsers();
       const existing = new Set(users.map(u=>String(u.id)));
       let id = String(idRaw).trim();
       if(!id || id.toUpperCase() === 'AUTO') id = generateId(existing);
       else {
-        if(!/^\d{10}$/.test(id)){ log('ID must be exactly 10 digits or AUTO', 'error'); return; }
-        if(existing.has(id)){ log('ID already exists', 'error'); return; }
+        if(!/^\d{10}$/.test(id)){ createLogEntry('ID must be exactly 10 digits or AUTO', 'error'); return; }
+        if(existing.has(id)){ createLogEntry('ID already exists', 'error'); return; }
       }
       const user = {
         name: String(name).trim(),
@@ -442,47 +446,47 @@
       };
       users.push(user);
       saveUsers(users);
-      log(`Created ${user.name} (${user.id})`);
+      createLogEntry(`Created ${user.name} (${user.id})`);
     }
 
     function cmdBan(args){
-      if(args.length < 1){ log('BAN requires id', 'error'); return; }
+      if(args.length < 1){ createLogEntry('BAN requires id', 'error'); return; }
       const id = String(args[0]).trim();
-      if(!/^\d{10}$/.test(id)){ log('ID must be 10 digits', 'error'); return; }
+      if(!/^\d{10}$/.test(id)){ createLogEntry('ID must be 10 digits', 'error'); return; }
       const users = loadUsers();
       const u = users.find(x=>String(x.id)===id);
-      if(!u){ log('User not found: '+id, 'error'); return; }
+      if(!u){ createLogEntry('User not found: '+id, 'error'); return; }
       u.status = 'Banned';
       saveUsers(users);
-      log(`Banned ${u.name} (${id})`);
+      createLogEntry(`Banned ${u.name} (${id})`);
     }
 
     function cmdIn(args){
-      if(args.length < 1){ log('IN requires id', 'error'); return; }
+      if(args.length < 1){ createLogEntry('IN requires id', 'error'); return; }
       const id = String(args[0]).trim();
-      if(!/^\d{10}$/.test(id)){ log('ID must be 10 digits', 'error'); return; }
+      if(!/^\d{10}$/.test(id)){ createLogEntry('ID must be 10 digits', 'error'); return; }
       const users = loadUsers();
       const u = users.find(x=>String(x.id)===id);
-      if(!u){ log('User not found: '+id, 'error'); return; }
+      if(!u){ createLogEntry('User not found: '+id, 'error'); return; }
       u.status = 'Suspended';
       saveUsers(users);
-      log(`Suspended ${u.name} (${id})`);
+      createLogEntry(`Suspended ${u.name} (${id})`);
     }
 
     function cmdUn(args){
-      if(args.length < 1){ log('UN requires id', 'error'); return; }
+      if(args.length < 1){ createLogEntry('UN requires id', 'error'); return; }
       const id = String(args[0]).trim();
-      if(!/^\d{10}$/.test(id)){ log('ID must be 10 digits', 'error'); return; }
+      if(!/^\d{10}$/.test(id)){ createLogEntry('ID must be 10 digits', 'error'); return; }
       const users = loadUsers();
       const u = users.find(x=>String(x.id)===id);
-      if(!u){ log('User not found: '+id, 'error'); return; }
+      if(!u){ createLogEntry('User not found: '+id, 'error'); return; }
       u.status = 'Active';
       saveUsers(users);
-      log(`Set Active: ${u.name} (${id})`);
+      createLogEntry(`Set Active: ${u.name} (${id})`);
     }
 
     function cmdEdit(args){
-      if(args.length < 3){ log('EDIT requires: idOrIndex,field,newValue', 'error'); return; }
+      if(args.length < 3){ createLogEntry('EDIT requires: idOrIndex,field,newValue', 'error'); return; }
       const target = String(args[0]).trim();
       const field = String(args[1]).trim().toLowerCase();
       const newVal = args[2];
@@ -490,7 +494,7 @@
       const users = loadUsers();
       let idx = -1;
       if(/^\d{10}$/.test(target)){
-        idx = users.findIndex(u => String(u.id) === target);
+        idx = users.findIndex(u=>String(u.id)===target);
       } else if(/^\d+$/.test(target)){
         const n = parseInt(target,10);
         if(n>=1 && n<=users.length) idx = n-1;
@@ -498,7 +502,7 @@
         idx = users.findIndex(u => u.name === target);
       }
 
-      if(idx === -1){ log('EDIT: user not found for ' + target, 'error'); return; }
+      if(idx === -1){ createLogEntry('EDIT: user not found for ' + target, 'error'); return; }
       const user = users[idx];
 
       switch(field){
@@ -507,32 +511,29 @@
         case 'experience': user.experience = String(newVal).trim(); break;
         case 'id':
           const nid = String(newVal).trim();
-          if(!/^\d{10}$/.test(nid)){ log('New id must be 10 digits', 'error'); return; }
-          if(users.some((u,i)=>i!==idx && String(u.id)===nid)){ log('ID already in use', 'error'); return; }
+          if(!/^\d{10}$/.test(nid)){ createLogEntry('New id must be 10 digits', 'error'); return; }
+          if(users.some((u,i)=>i!==idx && String(u.id)===nid)){ createLogEntry('ID already in use', 'error'); return; }
           user.id = nid;
           break;
         case 'premium': user.premium = parseBool(newVal); break;
         case 'trophies':
           const t = Number(newVal);
-          if(Number.isNaN(t)){ log('trophies must be a number', 'error'); return; }
+          if(Number.isNaN(t)){ createLogEntry('trophies must be a number', 'error'); return; }
           user.trophies = t;
           break;
         default:
-          log('Unknown field: ' + field, 'error'); return;
+          createLogEntry('Unknown field: ' + field, 'error'); return;
       }
       saveUsers(users);
-      log(`Edited ${user.name} (${user.id}) — set ${field} = ${newVal}`);
+      createLogEntry(`Edited ${user.name} (${user.id}) — set ${field} = ${newVal}`);
     }
 
     function cmdShow(args){
       const users = loadUsers();
-      if(args.length === 0 || !args[0]){
-        if(users.length === 0){ log('No users to show', 'error'); return; }
-        log(`SHOW: ${users.length} users`);
-        // display compact
-        users.slice().reverse().forEach(u => {
-          log(formatUser(u));
-        });
+      if(!args || args.length === 0 || !args[0]){
+        if(users.length === 0){ createLogEntry('No users to show', 'error'); return; }
+        createLogEntry(`SHOW: ${users.length} users`);
+        users.slice().reverse().forEach(u => createLogEntry(formatUser(u)));
         return;
       }
       const q = String(args[0]).trim();
@@ -546,36 +547,16 @@
         user = users.find(u=>u.name === q);
       }
 
-      if(!user){ log('User not found: '+q, 'error'); return; }
-      log('SHOW: single');
-      log(formatUser(user));
+      if(!user){ createLogEntry('User not found: '+q, 'error'); return; }
+      createLogEntry('SHOW: single');
+      createLogEntry(formatUser(user));
     }
 
     function formatUser(u){
       return `${u.name} • id:${u.id} • ${u.status} • exp:${u.experience || '-'} • premium:${u.premium} • trophies:${u.trophies}`;
     }
 
-    // Command dispatcher
+    // --- Command dispatcher ---
     function runCommand(raw){
-      if(!raw || !raw.trim()){ log('No command provided', 'error'); return; }
-      const m = raw.trim().match(/^([A-Za-z_]+)\s*(?:\((.*)\))?$/);
-      if(!m){ log('Invalid command format', 'error'); return; }
-      const cmd = m[1].toUpperCase();
-      const args = parseArgs(m[2] || '');
-      try{
-        switch(cmd){
-          case 'CREATE': cmdCreate(args); break;
-          case 'BAN': cmdBan(args); break;
-          case 'IN': cmdIn(args); break;
-          case 'UN': cmdUn(args); break;
-          case 'EDIT': cmdEdit(args); break;
-          case 'SHOW': cmdShow(args); break;
-          default: log('Unknown command: ' + cmd, 'error');
-        }
-      } catch(e){
-        console.error(e);
-        log('Error: ' + e.message, 'error');
-      }
-    }
-
-    
+      if(!raw || !raw.trim()){ createLogEntry('No command provided', 'error'); return; }
+      const m = raw.trim().match(/^([A-Za-z_]+)\s
